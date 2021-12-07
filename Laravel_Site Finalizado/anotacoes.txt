@@ -1,0 +1,10 @@
+- PHP 8.0.11 
+
+- Composer 2.1.12
+
+- Definir o composer e o php como variável do sistema
+
+- Rodar composer install antes de tudo
+
+- "php artisan serve" sobe o servidor local
+

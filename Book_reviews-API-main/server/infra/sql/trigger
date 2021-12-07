@@ -1,0 +1,30 @@
+-- Trigger que dispara logo após inserir uma review, ela é resposável por atualizar o rating do livro
+CREATE OR REPLACE FUNCTION update_book_rating_increase_function() RETURNS trigger AS $$
+DECLARE
+    num_reviews INT := (SELECT count(*) FROM reviews rws WHERE rws.id_book = NEW.id_book);
+    curr_rating FLOAT := (SELECT rating FROM books bks WHERE bks.id = NEW.id_book);
+    num_curr_rating_dot FLOAT := (curr_rating * (num_reviews - 1) + NEW.rating) / num_reviews;
+BEGIN 
+    UPDATE books bks SET rating = num_curr_rating_dot WHERE bks.id = NEW.id_book;
+    RETURN null;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_increase_book_rating AFTER INSERT ON reviews
+    FOR EACH ROW EXECUTE PROCEDURE update_book_rating_increase_function();
+
+
+-- Trigger que dispara logo após remover uma review, ela é responsável por atualizar o rating do livro
+CREATE OR REPLACE FUNCTION update_book_rating_decrease_function() RETURNS trigger AS $$
+DECLARE
+    num_reviews INT := (SELECT count(*) FROM reviews rws WHERE rws.id_book = OLD.id_book);
+    curr_rating FLOAT := (SELECT rating FROM books bks WHERE bks.id = OLD.id_book);
+    num_curr_rating_dot FLOAT := (curr_rating * (num_reviews + 1) - OLD.rating) / (num_reviews);
+BEGIN 
+    UPDATE books bks SET rating = num_curr_rating_dot WHERE bks.id = OLD.id_book;
+    RETURN null;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_decrease_book_rating AFTER DELETE ON reviews
+    FOR EACH ROW EXECUTE PROCEDURE update_book_rating_decrease_function();
